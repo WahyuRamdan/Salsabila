@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Untitled</title>
+    <link rel="icon" type="image/jpeg" sizes="1900x1250" href="{% get_static_prefix %}assets/img/header-bg.jpg">
+    <link rel="icon" type="image/jpeg" sizes="1900x1250" href="{% get_static_prefix %}assets/img/header-bg.jpg">
+    <link rel="stylesheet" href="{% get_static_prefix %}assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700&amp;display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Kaushan+Script&amp;display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{% get_static_prefix %}assets/css/Table-with-search-1-table.css">
+    <link rel="stylesheet" href="{% get_static_prefix %}assets/css/Table-with-search-1.css">
+
+    <!-- Leaflet JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ==" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js" integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ==" crossorigin=""></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark navbar-expand-lg fixed-top bg-dark" id="mainNav">
+        <div class="container"><a class="navbar-brand" href="/">PERKOTAAN</a><button data-bs-toggle="collapse" data-bs-target="#navbarResponsive" class="navbar-toggler navbar-toggler-right" type="button" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><i class="fa fa-bars"></i></button>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ms-auto text-uppercase">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    {% if request.user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="/maps">Maps</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/table">Table Kota</a></li>
+                    {% endif %}
+                    {% if request.user.is_authenticated %}
+                        <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                        {% else %}
+                        <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <section id="services">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <h2 class="text-uppercase section-heading">Maps</h2>
+                    <h3 class="text-muted section-subheading">Cari Tahu kota dan Provinsinya</h3>
+                </div>
+            </div>
+            <div class="row text-center">
+                <div class="col">
+                    <div id="map-box" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <form method="POST">
+            <div class="col mt-4" style="display: flex;">
+                    {% csrf_token %}
+                    <input type="hidden" name="lokasi" id="map-input" value="">
+
+                    {% if map_id %}
+                        <input type="text" class="form-control" name="kota" style="width: 300px;" value="{{map_id.kota}}">
+                    {% else %}
+                        <input type="text" class="form-control" name="kota" style="width: 300px;" placeholder="Nama Kota...">
+                    {% endif %}
+                    <button class="btn btn-primary" type="submit" style="margin-left: 28px;">SAVE !</button>
+            </div>
+        </form>
+
+        </div>
+<span class="counter pull-right"></span>
+<table class="table table-hover table-bordered results">
+  <thead>
+    <tr>
+      <th>No</th>
+      <th class="col-md-5 col-xs-5">Nama Kota</th>
+      <th class="col-md-4 col-xs-4">Titik</th>
+      <th class="col-md-3 col-xs-3">Buttons</th>
+    </tr>
+    <tr class="warning no-result">
+      <td colspan="4"><i class="fa fa-warning"></i> No result</td>
+    </tr>
+  </thead>
+  <tbody>
+    
+    {% for map in maps %}        
+        <tr>
+        <th scope="row">{{forloop.counter}}</th>
+        <td>{{map.kota}}</td>
+        <td>{{map.lokasi}}</td>
+        <td>
+            <a class="btn btn-danger" href="/maps/hapus/{{map.id}}">Hapus</a>
+            <a class="btn btn-primary" href="/maps/{{map.id}}">Edit</a>
+            
+        </td>
+        </tr>
+    {% endfor %}
+    
+  </tbody>
+</table>
+    </section>
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="col-md-4 col-lg-4"><span class="copyright">Copyright&nbsp;© Brand 2023</span></div>
+                <div class="col-md-4"></div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Leaflet JS
+        const map = L.map('map-box').setView([0,0], 0); 
+        const map_input = document.getElementById("map-input")
+        
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 50,
+        }).addTo(map);
+        map.setView(new L.LatLng(-7.475768041236161 , 110.05664069205524), 5)
+        
+        {% if map_id %}
+        let lokasi = '{{map_id.lokasi}}'
+        let current_maker = lokasi.split(",")
+
+        const maker = L.marker([current_maker[0],current_maker[1]]).addTo(map)
+        map_input.value = `${current_maker[0]}, ${current_maker[1]}`
+            {% else %}
+        const maker = L.marker([-7.475768041236161 , 110.05664069205524]).addTo(map)
+        map_input.value = `-7.475768041236161 , 110.05664069205524`
+        {% endif %}
+        
+        map.on('click', function (e) {
+        const {lat, lng} = e.latlng
+        map_input.value = `${lat} , ${lng}`
+        maker.setLatLng([lat, lng]) 
+        })
+        // end leaflet jS
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% get_static_prefix %}assets/js/agency.js"></script>
+    <script src="{% get_static_prefix %}assets/js/Table-with-search-1.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,1 @@
+web: gunicorn salsabila.wsgi --log-file -
